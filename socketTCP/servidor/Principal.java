@@ -11,6 +11,7 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.regex.Pattern;
 
 public class Principal {
 
@@ -41,6 +42,11 @@ public class Principal {
                 System.out.println("Digite o ip do servidor:");
                 // recebe a resposta
                 String ip = ler.next();
+                while (!validarIP(ip)) {
+                    System.out.println("Digite um ip VALIDO:");
+                    // recebe a resposta
+                    ip = ler.next();
+                }
                 servidoresConhecidos.add(ip);
             }
 
@@ -49,10 +55,10 @@ public class Principal {
         }
 
         // Inicia o servidor TCP em uma thread separada
-        Thread servidorTCPThread = new Thread(() -> {
-            ServidorTempoTCP servidorTempoTCP = new ServidorTempoTCP();
-            servidorTempoTCP.iniciar();
-        });
+        // Thread servidorTCPThread = new Thread(() -> {
+        //     ServidorTempoTCP servidorTempoTCP = new ServidorTempoTCP();
+        //     servidorTempoTCP.iniciar();
+        // });
 
         Thread sincronizacaoTCP = new Thread(() -> {
             Sincronizacao sincronizacao = new Sincronizacao(app, servidoresConhecidos);
@@ -62,7 +68,7 @@ public class Principal {
         sincronizacaoTCP.start(); // Inicia sincronização automática
 
         // Inicia as threads
-        servidorTCPThread.start();
+        // servidorTCPThread.start();
 
         iniciarHorario();
 
@@ -113,5 +119,18 @@ public class Principal {
                 }
             }
         }).start();
+    }
+
+    /*
+     * ***************************************************************
+     * Metodo: validarIP
+     * Funcao: Verifica se uma string possui o formato válido de um endereço IP.
+     * Parametros: String ip - endereço IP a ser validado.
+     * Retorno: boolean - true se o IP for válido, false caso contrário.
+     * ***************************************************************
+     */
+    private static boolean validarIP(String ip) {
+        String regex = "^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$";
+        return Pattern.matches(regex, ip);
     }
 }

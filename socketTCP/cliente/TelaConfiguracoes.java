@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
 
 public class TelaConfiguracoes {
     private VBox layout = new VBox(30); // Layout da tela inicial
-    private Label inputLabel; 
+    private Label inputLabel;
     private TextField inputTextField;
     private Principal app; // Referência à classe principal
 
@@ -26,7 +26,8 @@ public class TelaConfiguracoes {
         // Criando o campo de input (TextField)
         inputTextField = new TextField();
         inputTextField.setPromptText("192.168.0.1"); // Placeholder
-        inputTextField.setStyle("-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: gray; -fx-padding: 10px; -fx-background-radius: 10; -fx-border-radius: 10; fx-border-width: 2;");
+        inputTextField.setStyle(
+                "-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: gray; -fx-padding: 10px; -fx-background-radius: 10; -fx-border-radius: 10; fx-border-width: 2;");
 
         VBox inputVBox = new VBox();
         inputVBox.getChildren().addAll(inputLabel, inputTextField);
@@ -63,7 +64,15 @@ public class TelaConfiguracoes {
         layout.getChildren().addAll(inputVBox, spacer, buttonsHbox);
     }
 
-    // Método para validar e salvar o IP na classe Principal
+    /*
+     * ***************************************************************
+     * Metodo: salvarIP
+     * Funcao: Valida o IP digitado e, se estiver correto, salva na classe principal
+     * e inicia conexão com o servidor.
+     * Parametros: nenhum.
+     * Retorno: void
+     * ***************************************************************
+     */
     private void salvarIP() {
         String ip = inputTextField.getText().trim();
         if (validarIP(ip)) {
@@ -73,21 +82,45 @@ public class TelaConfiguracoes {
             voltarParaTelaPrincipal(); // Volta para a tela principal
         } else {
             System.out.println("IP invalido!");
-            // inputTextField.setStyle("-fx-text-fill: red;"); // Altera a cor do texto para vermelho em caso de erro
+            // inputTextField.setStyle("-fx-text-fill: red;"); // Altera a cor do texto para
+            // vermelho em caso de erro
         }
     }
 
-    // Método para validar o formato do IP
+    /*
+     * ***************************************************************
+     * Metodo: validarIP
+     * Funcao: Verifica se o IP informado no campo de texto está no formato IPv4
+     * válido.
+     * Parametros: String ip - endereço IP a ser validado.
+     * Retorno: boolean - true se válido, false se inválido.
+     * ***************************************************************
+     */
     private boolean validarIP(String ip) {
         String regex = "^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$";
         return Pattern.matches(regex, ip);
     }
 
-    // Método para voltar à tela principal
+    /*
+     * ***************************************************************
+     * Metodo: voltarParaTelaPrincipal
+     * Funcao: Alterna a interface de volta para a tela principal do relógio.
+     * Parametros: nenhum.
+     * Retorno: void
+     * ***************************************************************
+     */
     private void voltarParaTelaPrincipal() {
         app.mostrarTelaRelogio();
     }
 
+    /*
+     * ***************************************************************
+     * Metodo: getLayout
+     * Funcao: Retorna o layout principal da tela de configurações para ser exibido.
+     * Parametros: nenhum.
+     * Retorno: VBox - layout da tela.
+     * ***************************************************************
+     */
     public VBox getLayout() {
         return layout;
     }

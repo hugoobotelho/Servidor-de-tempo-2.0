@@ -26,11 +26,28 @@ public class Sincronizacao {
         }
     }
 
+    /*
+     * ***************************************************************
+     * Metodo: iniciarSincronizacao
+     * Funcao: Inicia duas threads: uma para atuar como servidor e outra para
+     * sincronizar horários com outros servidores.
+     * Parametros: nenhum.
+     * Retorno: nenhum.
+     * ***************************************************************
+     */
     public void iniciarSincronizacao() {
         new Thread(this::iniciarServidor).start();
         new Thread(this::enviarSinc).start();
     }
 
+    /*
+     * ***************************************************************
+     * Metodo: iniciarServidor
+     * Funcao: Inicia o servidor TCP que escuta requisições de sincronização.
+     * Parametros: nenhum.
+     * Retorno: nenhum.
+     * ***************************************************************
+     */
     private void iniciarServidor() {
         try (ServerSocket serverSocket = new ServerSocket(PORTA)) {
             System.out.println("Servidor TCP iniciado na porta " + PORTA);
@@ -44,6 +61,15 @@ public class Sincronizacao {
         }
     }
 
+    /*
+     * ***************************************************************
+     * Metodo: processarConexao
+     * Funcao: Processa a conexão recebida, atualiza a lista de servidores e
+     * responde com o horário atual.
+     * Parametros: Socket socket - conexão recebida.
+     * Retorno: nenhum.
+     * ***************************************************************
+     */
     private void processarConexao(Socket socket) {
         try (ObjectInputStream entrada = new ObjectInputStream(socket.getInputStream());
                 ObjectOutputStream saida = new ObjectOutputStream(socket.getOutputStream())) {
@@ -52,7 +78,7 @@ public class Sincronizacao {
             String mensagem = (String) entrada.readObject();
             String ipRemetente = socket.getInetAddress().getHostAddress();
 
-            if (!"REQ".equals(mensagem)){
+            if (!"REQ".equals(mensagem)) {
                 List<String> novosServidores = (List<String>) entrada.readObject();
                 // Adiciona novos servidores à lista
                 servidoresConhecidos.add(ipRemetente);
@@ -80,6 +106,15 @@ public class Sincronizacao {
         }
     }
 
+    /*
+     * ***************************************************************
+     * Metodo: enviarSinc
+     * Funcao: Envia requisições de sincronização para os servidores conhecidos,
+     * coleta os horários e calcula o novo horário local.
+     * Parametros: nenhum.
+     * Retorno: nenhum.
+     * ***************************************************************
+     */
     private void enviarSinc() {
         while (true) {
             List<LocalTime> temposRecebidos = new ArrayList<>();
@@ -152,12 +187,31 @@ public class Sincronizacao {
         }
     }
 
+    /*
+     * ***************************************************************
+     * Metodo: ajustarHorario
+     * Funcao: Define o horário local como a média dos horários recebidos dos outros
+     * servidores.
+     * Parametros: List<LocalTime> temposRecebidos - lista com os horários
+     * recebidos.
+     * Retorno: nenhum.
+     * ***************************************************************
+     */
     private void ajustarHorario(List<LocalTime> temposRecebidos) {
         LocalTime media = calcularMedia(temposRecebidos);
         System.out.println("Ajustando horário para: " + media);
         app.setHorarioMaquina(media);
     }
 
+    /*
+     * ***************************************************************
+     * Metodo: calcularMedia
+     * Funcao: Calcula a média dos horários recebidos em segundos.
+     * Parametros: List<LocalTime> tempos - lista com os horários a serem usados no
+     * cálculo.
+     * Retorno: LocalTime - horário médio resultante.
+     * ***************************************************************
+     */
     private LocalTime calcularMedia(List<LocalTime> tempos) {
         long somaSegundos = tempos.stream().mapToLong(LocalTime::toSecondOfDay).sum();
         long mediaSegundos = somaSegundos / tempos.size();

@@ -57,7 +57,15 @@ public class TelaRelogio {
         layout.getChildren().addAll(relogioLabel, spacer, buttonsHbox);
     }
 
-    // Método para iniciar a Thread do relógio
+    /*
+     * ***************************************************************
+     * Metodo: iniciarRelogio
+     * Funcao: Inicia uma thread que atualiza o tempo no rótulo do relógio a cada
+     * segundo.
+     * Parametros: nenhum.
+     * Retorno: void
+     * ***************************************************************
+     */
     private void iniciarRelogio() {
         threadRelogio = new Thread(() -> {
             while (rodando) {
@@ -66,7 +74,7 @@ public class TelaRelogio {
                     // LocalTime tempoAtualizado = app.getTempoAtual();
                     // app.setTempoAtual(tempoAtualizado);
                     tempoAtual = tempoAtual.plusSeconds(1);
-                    
+
                     // Formata a hora para exibição
                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
                     String horaFormatada = tempoAtual.format(formatter);
@@ -87,24 +95,47 @@ public class TelaRelogio {
         threadRelogio.start(); // Inicia a thread
     }
 
-    // Método chamado ao clicar no botão "Atualizar"
+    /*
+     * ***************************************************************
+     * Metodo: atualizarRelogio
+     * Funcao: Solicita a atualização do relógio conectando-se ao servidor via TCP,
+     * caso um IP esteja configurado.
+     * Parametros: nenhum.
+     * Retorno: void
+     * ***************************************************************
+     */
     private void atualizarRelogio() {
         if (app.getIpServidor().isEmpty()) {
             System.out.println("Nenhum IP configurado! Indo para tela de configuracoes...");
             app.mostrarTelaConfiguracoes();
         } else {
             System.out.println("Atualizando relogio com IP: " + app.getIpServidor());
-            String requisisaoAPDU = "REQ";
+            // String requisisaoAPDU = "REQ";
             // app.iniciarTimer();
             app.getClienteTCP().conectarServidor(app.getIpServidor());
         }
     }
 
+    /*
+     * ***************************************************************
+     * Metodo: atualizarTempoAtual
+     * Funcao: Atualiza a variável estática com o novo horário recebido do servidor.
+     * Parametros: LocalTime tempo - novo tempo a ser exibido.
+     * Retorno: void
+     * ***************************************************************
+     */
     public static void atualizarTempoAtual(LocalTime tempo) {
         tempoAtual = tempo;
     }
-    
-    // Método chamado ao clicar no botão "Resetar"
+
+    /*
+     * ***************************************************************
+     * Metodo: resetarRelogio
+     * Funcao: Reinicia o relógio para 00:00:00 e atualiza a interface gráfica.
+     * Parametros: nenhum.
+     * Retorno: void
+     * ***************************************************************
+     */
     private void resetarRelogio() {
         // app.setTempoAtual(LocalTime.of(0, 0, 0)); // Define o relógio para 00:00:00
         tempoAtual = LocalTime.of(0, 0, 0);
@@ -112,11 +143,27 @@ public class TelaRelogio {
         System.out.println("Relógio resetado para 00:00:00.");
     }
 
+    /*
+     * ***************************************************************
+     * Metodo: getLayout
+     * Funcao: Retorna o layout principal da tela do relógio para ser exibido na
+     * interface.
+     * Parametros: nenhum.
+     * Retorno: VBox - layout da tela.
+     * ***************************************************************
+     */
     public VBox getLayout() {
         return layout;
     }
 
-    // Método para parar a thread ao fechar a aplicação
+    /*
+     * ***************************************************************
+     * Metodo: pararRelogio
+     * Funcao: Encerra a execução da thread que atualiza o relógio.
+     * Parametros: nenhum.
+     * Retorno: void
+     * ***************************************************************
+     */
     public void pararRelogio() {
         rodando = false;
     }
