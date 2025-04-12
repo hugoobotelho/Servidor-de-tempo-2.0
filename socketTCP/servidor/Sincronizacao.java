@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 public class Sincronizacao {
     private final static int PORTA = 2025;
@@ -120,8 +122,11 @@ public class Sincronizacao {
             List<LocalTime> temposRecebidos = new ArrayList<>();
             List<Thread> threads = new ArrayList<>();
             long inicioTimer = System.currentTimeMillis();
+            List<String> ipsParaEnviar = servidoresConhecidos.stream()
+                    .filter(ip -> !ip.equals(ipLocal.getHostAddress()))
+                    .collect(Collectors.toList());
 
-            for (String ipServidor : servidoresConhecidos) {
+            for (String ipServidor : ipsParaEnviar) {
                 Thread thread = new Thread(() -> {
                     try (Socket socket = new Socket(ipServidor, PORTA);
                             ObjectOutputStream saida = new ObjectOutputStream(socket.getOutputStream());

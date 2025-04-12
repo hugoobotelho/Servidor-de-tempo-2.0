@@ -16,7 +16,8 @@ public class ClienteTempoTCP {
         this.app = app;
         this.porta = porta;
         this.ipServidor = ipInicial;
-        conectarServidor(ipServidor);
+        servidoresConhecidos.add(ipInicial);
+        // conectarServidor(ipServidor);
     }
 
     /*
@@ -30,62 +31,64 @@ public class ClienteTempoTCP {
      * ***************************************************************
      */
     public void conectarServidor(String ip) {
-        new Thread(() -> {
-            while (true) { // Loop infinito até encontrar um servidor ativo
-                try (Socket socket = new Socket(ip, porta);
-                        ObjectOutputStream saida = new ObjectOutputStream(socket.getOutputStream());
-                        ObjectInputStream entrada = new ObjectInputStream(socket.getInputStream())) {
+        if (!ip.equals("")) {
+            new Thread(() -> {
+                while (true) { // Loop infinito até encontrar um servidor ativo
+                    try (Socket socket = new Socket(ip, porta);
+                            ObjectOutputStream saida = new ObjectOutputStream(socket.getOutputStream());
+                            ObjectInputStream entrada = new ObjectInputStream(socket.getInputStream())) {
 
-                    servidorAtivo = ip; // Define o servidor ativo
-                    System.out.println("Conectado ao servidor ativo: " + servidorAtivo);
-                    InetAddress endereco = InetAddress.getByName(ip);
-                    servidoresDisponiveis.put(endereco, true);
-
-                    long inicioTimer = System.currentTimeMillis();
-
-                    saida.writeObject("REQ");
-                    saida.flush();
-
-                    // Recebe a lista de servidores conhecidos
-                    // Recebe resposta
-                    String resposta = (String) entrada.readObject();
-                    List<String> novosServidores = (List<String>) entrada.readObject();
-                    // if (resposta instanceof ArrayList) {
-                    if (!servidorAtivo.equals("")) {
-                        servidoresConhecidos.add(servidorAtivo);
-                    }
-                    servidoresConhecidos.addAll((ArrayList<String>) novosServidores); // Agora não duplica!
-
-                    for (String servidor : novosServidores) {
-                        servidoresDisponiveis.put(InetAddress.getByName(servidor), true);
-                    }
-                    System.out.println("Servidores conhecidos: " + servidoresConhecidos);
-                    // }
-                    // Object resposta = entrada.readObject();
-                    long tempoDecorrido = System.currentTimeMillis() - inicioTimer;
-
-                    app.processarMensagemRecebida(resposta, tempoDecorrido);
-
-                    tentandoReconectar = false; // Conseguiu conectar, então para a tentativa
-                    // app.configurarHeader();
-
-                    return; // Sai do loop pois conseguiu conectar
-
-                } catch (Exception e) {
-                    System.err.println("Erro ao conectar com " + ip + ": " + e.getMessage());
-                    try {
+                        servidorAtivo = ip; // Define o servidor ativo
+                        System.out.println("Conectado ao servidor ativo: " + servidorAtivo);
                         InetAddress endereco = InetAddress.getByName(ip);
-                        servidoresDisponiveis.put(endereco, false); // Marca como indisponível
-                    } catch (UnknownHostException ex) {
-                        ex.printStackTrace();
+                        servidoresDisponiveis.put(endereco, true);
+
+                        long inicioTimer = System.currentTimeMillis();
+
+                        saida.writeObject("REQ");
+                        saida.flush();
+
+                        // Recebe a lista de servidores conhecidos
+                        // Recebe resposta
+                        String resposta = (String) entrada.readObject();
+                        List<String> novosServidores = (List<String>) entrada.readObject();
+                        // if (resposta instanceof ArrayList) {
+                        if (!servidorAtivo.equals("")) {
+                            servidoresConhecidos.add(servidorAtivo);
+                        }
+                        servidoresConhecidos.addAll((ArrayList<String>) novosServidores); // Agora não duplica!
+
+                        for (String servidor : servidoresConhecidos) {
+                            servidoresDisponiveis.put(InetAddress.getByName(servidor), true);
+                        }
+                        System.out.println("Servidores conhecidos: " + servidoresConhecidos);
+                        // }
+                        // Object resposta = entrada.readObject();
+                        long tempoDecorrido = System.currentTimeMillis() - inicioTimer;
+
+                        app.processarMensagemRecebida(resposta, tempoDecorrido);
+
+                        tentandoReconectar = false; // Conseguiu conectar, então para a tentativa
+                        // app.configurarHeader();
+
+                        return; // Sai do loop pois conseguiu conectar
+
+                    } catch (Exception e) {
+                        System.err.println("Erro ao conectar com " + ip + ": " + e.getMessage());
+                        try {
+                            InetAddress endereco = InetAddress.getByName(ip);
+                            servidoresDisponiveis.put(endereco, false); // Marca como indisponível
+                        } catch (UnknownHostException ex) {
+                            ex.printStackTrace();
+                        }
+
+                        // app.configurarHeader();
+                        escolherNovoServidor(); // Se falhar, tenta outro
+                                                                                         // servidor
                     }
-
-                    // app.configurarHeader();
-                    escolherNovoServidor(); // Se falhar, tenta outro servidor
                 }
-            }
-        }).start();
-
+            }).start();
+        }
     }
 
     /*
@@ -98,24 +101,43 @@ public class ClienteTempoTCP {
      * ***************************************************************
      */
     private void escolherNovoServidor() {
-        if (servidoresConhecidos.isEmpty()) {
-            System.err.println("Nenhum servidor conhecido. Tentando novamente em 5 segundos...");
-            tentarReconectar();
-            return;
-        }
-
-        for (String ip : servidoresConhecidos) {
-            if (!ip.equals(servidorAtivo)) {
-                System.out.println("Tentando novo servidor: " + ip);
-                conectarServidor(ip);
-                if (servidorAtivo.equals(ip))
-                    return; // Se conseguiu conectar, sai
-            }
-        }
-
-        System.err.println("Nenhum servidor disponível no momento. Tentando novamente...");
-        tentarReconectar();
+        List<String> listaServidores = new ArrayList<>(servidoresConhecidos);
+    
+        if (listaServidores.isEmpty()) return;
+    
+        int total = listaServidores.size();
+        int indiceAtual = listaServidores.indexOf(servidorAtivo);
+    
+        // Pega apenas o próximo da lista
+        int proximoIndice = (indiceAtual + 1) % total;
+        String ip = listaServidores.get(proximoIndice);
+    
+        System.out.println("Tentando próximo servidor: " + ip);
+        conectarServidor(ip);
     }
+    
+
+    // private void escolherNovoServidor() {
+    // // if (servidoresConhecidos.isEmpty()) {
+    // // System.err.println("Nenhum servidor conhecido. Tentando novamente em 5
+    // segundos...");
+    // // tentarReconectar();
+    // // return;
+    // // }
+
+    // for (String ip : servidoresConhecidos) {
+    // if (!ip.equals(servidorAtivo)) {
+    // System.out.println("Tentando novo servidor: " + ip);
+    // conectarServidor(ip);
+    // if (servidorAtivo.equals(ip))
+    // return; // Se conseguiu conectar, sai
+    // }
+    // }
+
+    // System.err.println("Nenhum servidor disponível no momento. Tentando
+    // novamente...");
+    // tentarReconectar();
+    // }
 
     /*
      * ***************************************************************
@@ -126,31 +148,31 @@ public class ClienteTempoTCP {
      * Retorno: void
      * ***************************************************************
      */
-    private void tentarReconectar() {
-        if (tentandoReconectar)
-            return; // Já está tentando, não precisa duplicar
+    // private void tentarReconectar() {
+    //     if (tentandoReconectar)
+    //         return; // Já está tentando, não precisa duplicar
 
-        tentandoReconectar = true;
-        new Thread(() -> {
-            while (tentandoReconectar) {
-                for (String ip : servidoresConhecidos) {
-                    System.out.println("Verificando disponibilidade de: " + ip);
-                    try (Socket socket = new Socket(ip, porta)) {
-                        System.out.println("Servidor voltou: " + ip);
-                        conectarServidor(ip);
-                        // app.configurarHeader();
-                        return; // Se conseguir conectar, sai do loop
-                    } catch (IOException ignored) {
-                        // Servidor ainda indisponível
-                    }
-                }
-                try {
-                    Thread.sleep(5000); // Espera 5 segundos antes de tentar de novo
-                } catch (InterruptedException ignored) {
-                }
-            }
-        }).start();
-    }
+    //     tentandoReconectar = true;
+    //     new Thread(() -> {
+    //         while (tentandoReconectar) {
+    //             for (String ip : servidoresConhecidos) {
+    //                 System.out.println("Verificando disponibilidade de: " + ip);
+    //                 try (Socket socket = new Socket(ip, porta)) {
+    //                     System.out.println("Servidor voltou: " + ip);
+    //                     conectarServidor(ip);
+    //                     // app.configurarHeader();
+    //                     return; // Se conseguir conectar, sai do loop
+    //                 } catch (IOException ignored) {
+    //                     // Servidor ainda indisponível
+    //                 }
+    //             }
+    //             try {
+    //                 Thread.sleep(5000); // Espera 5 segundos antes de tentar de novo
+    //             } catch (InterruptedException ignored) {
+    //             }
+    //         }
+    //     }).start();
+    // }
 
     /*
      * ***************************************************************

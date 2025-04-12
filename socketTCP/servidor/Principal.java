@@ -1,8 +1,8 @@
 /* ***************************************************************
 * Autor............: Hugo Botelho Santana
 * Matricula........: 202210485
-* Inicio...........: 18/03/2025
-* Ultima alteracao.: 20/03/2025
+* Inicio...........: 29/03/2025
+* Ultima alteracao.: 05/04/2025
 * Nome.............: Servidor de tempo
 * Funcao...........: Oferecer um servico de tempo aos clientes
 *************************************************************** */
@@ -20,7 +20,7 @@ public class Principal {
     private static Boolean isPrincipal;
 
     public Principal() {
-        this.horarioMaquina = LocalTime.now();
+        horarioMaquina = LocalTime.now();
         servidoresConhecidos = new ArrayList<String>();
     }
 
@@ -95,8 +95,8 @@ public class Principal {
      * Retorno: sem retorno.
      * ***************************************************************
      */
-    public void setHorarioMaquina(LocalTime horarioMaquina) {
-        this.horarioMaquina = horarioMaquina;
+    public void setHorarioMaquina(LocalTime horario) {
+        horarioMaquina = horario;
     }
 
     /*
