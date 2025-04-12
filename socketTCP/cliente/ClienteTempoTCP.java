@@ -10,6 +10,7 @@ public class ClienteTempoTCP {
     private boolean tentandoReconectar = false; // Indica se está no modo de reconexão
     private String ipServidor;
     private Map<InetAddress, Boolean> servidoresDisponiveis = new HashMap<>();
+    private int indiceAtual = 0;
 
     // Construtor
     public ClienteTempoTCP(Principal app, String ipInicial, int porta) {
@@ -33,7 +34,7 @@ public class ClienteTempoTCP {
     public void conectarServidor(String ip) {
         if (!ip.equals("")) {
             new Thread(() -> {
-                while (true) { // Loop infinito até encontrar um servidor ativo
+                // while (true) { // Loop infinito até encontrar um servidor ativo
                     try (Socket socket = new Socket(ip, porta);
                             ObjectOutputStream saida = new ObjectOutputStream(socket.getOutputStream());
                             ObjectInputStream entrada = new ObjectInputStream(socket.getInputStream())) {
@@ -71,7 +72,7 @@ public class ClienteTempoTCP {
                         tentandoReconectar = false; // Conseguiu conectar, então para a tentativa
                         // app.configurarHeader();
 
-                        return; // Sai do loop pois conseguiu conectar
+                        // return; // Sai do loop pois conseguiu conectar
 
                     } catch (Exception e) {
                         System.err.println("Erro ao conectar com " + ip + ": " + e.getMessage());
@@ -83,10 +84,16 @@ public class ClienteTempoTCP {
                         }
 
                         // app.configurarHeader();
+                        try {
+                            Thread.sleep(1000); // espera 1 segundo para escolher o novo servidor
+                        } catch (InterruptedException e1) {
+                            // TODO Auto-generated catch block
+                            e1.printStackTrace();
+                        }
                         escolherNovoServidor(); // Se falhar, tenta outro
                                                                                          // servidor
                     }
-                }
+                // }
             }).start();
         }
     }
@@ -106,11 +113,14 @@ public class ClienteTempoTCP {
         if (listaServidores.isEmpty()) return;
     
         int total = listaServidores.size();
-        int indiceAtual = listaServidores.indexOf(servidorAtivo);
+        indiceAtual++;
+        if (indiceAtual >= total) {
+            indiceAtual = 0;
+        }
     
         // Pega apenas o próximo da lista
-        int proximoIndice = (indiceAtual + 1) % total;
-        String ip = listaServidores.get(proximoIndice);
+        // int proximoIndice = (indiceAtual + 1) % total;
+        String ip = listaServidores.get(indiceAtual);
     
         System.out.println("Tentando próximo servidor: " + ip);
         conectarServidor(ip);

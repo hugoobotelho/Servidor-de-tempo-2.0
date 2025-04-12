@@ -61,7 +61,7 @@ public class Principal extends Application {
         root.getChildren().setAll(mainLayout);
 
         // Criando e conectando o cliente TCP
-        criarClienteTCP(ipServidor, 2025);
+        // criarClienteTCP(ipServidor, 2025);
 
         // Configura o evento de encerramento do aplicativo
         primaryStage.setOnCloseRequest(t -> {
